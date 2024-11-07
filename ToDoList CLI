@@ -43,15 +43,15 @@ func markComp(todo *ToDo) {
 	var task int
 	fmt.Printf("Type the index of the task you want to mark as complete: ")
 	fmt.Scanln(&task)
-	for i := range todo.Description {
-		if task == i+1 && todo.Completed[i] == false {
-			todo.Completed[i] = true
-			fmt.Println("The task is marked as complete.")
-		} else if task == i+1 && todo.Completed[i] == true {
-			fmt.Println("The task is already complete.")
-		} else {
-			fmt.Println("Index is out of bounds.")
-		}
+	if task < 1 || task > len(todo.Description) {
+		fmt.Println("Index is out of bounds.")
+		return
+	}
+	if !todo.Completed[task-1] {
+		todo.Completed[task-1] = true
+		fmt.Println("The task is marked as complete.")
+	} else {
+		fmt.Println("The task is already complete.")
 	}
 }
 
@@ -59,15 +59,14 @@ func delTask(todo *ToDo) {
 	var task int
 	fmt.Printf("Type the index of the task you want to delete: ")
 	fmt.Scanln(&task)
-	for i := range todo.Description {
-		if task == i+1 {
-			todo.Description = append(todo.Description[:i], todo.Description[i+1:]...)
-			todo.Completed = append(todo.Completed[:i], todo.Completed[i+1:]...)
-			fmt.Println("The task is deleted from the list.")
-		} else {
-			fmt.Println("Index is out of bounds.")
-		}
+	if task < 1 || task > len(todo.Description) {
+		fmt.Println("Index is out of bounds.")
+		return
 	}
+	
+	todo.Description = append(todo.Description[:task-1], todo.Description[task:]...)
+	todo.Completed = append(todo.Completed[:task-1], todo.Completed[task:]...)
+	fmt.Println("The task is deleted from the list.")
 }
 
 func quit(quit *bool, todo *ToDo) {
