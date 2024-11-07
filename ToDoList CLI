@@ -1,0 +1,185 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"strconv"
+	"time"
+)
+
+type ToDo struct {
+	Description []string
+	Completed   []bool
+}
+
+func AddTask(todo *ToDo) {
+	fmt.Printf("Write the task you want in the list: ")
+	var Description string
+	fmt.Scanln(&Description)
+	for _, des := range todo.Description {
+		if Description == des {
+			fmt.Println("This task is already on the list.")
+			return
+		}
+	}
+	todo.Description = append(todo.Description, Description)
+	todo.Completed = append(todo.Completed, false)
+	fmt.Println("The task is added to the list.")
+}
+
+func viewTasks(todo *ToDo) {
+	fmt.Println("Current tasks are: ")
+	for i, des := range todo.Description {
+		fmt.Printf("%d. %s	", i+1, des)
+		if todo.Completed[i] {
+			fmt.Println("[Complete]")
+		} else {
+			fmt.Println("[Incomplete]")
+		}
+	}
+}
+
+func markComp(todo *ToDo) {
+	var task int
+	fmt.Printf("Type the index of the task you want to mark as complete: ")
+	fmt.Scanln(&task)
+	if task < 1 || task > len(todo.Description) {
+		fmt.Println("Index is out of bounds.")
+		return
+	}
+	if !todo.Completed[task-1] {
+		todo.Completed[task-1] = true
+		fmt.Println("The task is marked as complete.")
+	} else {
+		fmt.Println("The task is already complete.")
+	}
+}
+
+func delTask(todo *ToDo) {
+	var task int
+	fmt.Printf("Type the index of the task you want to delete: ")
+	fmt.Scanln(&task)
+	if task < 1 || task > len(todo.Description) {
+		fmt.Println("Index is out of bounds.")
+		return
+	}
+	
+	todo.Description = append(todo.Description[:task-1], todo.Description[task:]...)
+	todo.Completed = append(todo.Completed[:task-1], todo.Completed[task:]...)
+	fmt.Println("The task is deleted from the list.")
+}
+
+func quit(quit *bool, todo *ToDo) {
+	var str string
+	fmt.Println("Do you want to save your list before quiting? (Yes/No)")
+	fmt.Scanln(&str)
+	if str == "Yes" || str == "yes" || str == "YES" {
+		saveFile(todo)
+	}
+
+	fmt.Println("Are you sure you want to quit? (Yes/No)")
+	fmt.Scanln(&str)
+	if str == "Yes" || str == "yes" || str == "YES" {
+		*quit = false
+	}
+
+}
+
+func saveFile(todo *ToDo) {
+	exist, err1 := os.OpenFile("C:/ToDo/list.txt", os.O_APPEND|os.O_WRONLY, 0644)
+	time_A := time.Now().Format(time.RFC822)
+	time := fmt.Sprintf("\n%s\n______________________________________________\n", time_A)
+	if err1 != nil {
+		file, err := os.Create("C:/ToDo/list.txt")
+		if err != nil {
+			fmt.Println("File cannot be created:", err)
+			return
+		}
+
+		defer file.Close()
+
+		for i, des := range todo.Description {
+			status := "[Incomplete]"
+			if todo.Completed[i] {
+				status = "[Complete]"
+			}
+			_, err := fmt.Fprintf(file, "%d. %s		%s\n", i+1, des, status)
+			if err != nil {
+				fmt.Println("Error while writing to the file:", err)
+				return
+			}
+		}
+		_, err1 := exist.WriteString(time)
+		if err1 != nil {
+			fmt.Println(err1)
+			return
+		}
+	} else {
+		defer exist.Close()
+
+		for i, des := range todo.Description {
+			status := "[Incomplete]"
+			if todo.Completed[i] {
+				status = "[Complete]"
+			}
+			data := fmt.Sprintf("%s. %s		%s\n", strconv.Itoa(i+1), des, status)
+			_, err := exist.WriteString(data)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+		_, err := exist.WriteString(time)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+	fmt.Println("File saved in: C:/ToDo/ as list.txt")
+}
+
+func Greet() {
+	fmt.Println("Welcome to your to do list!")
+	fmt.Println("1. Add a task")
+	fmt.Println("2. View tasks")
+	fmt.Println("3. Mark a task as complete")
+	fmt.Println("4. Delete a task")
+	fmt.Println("5. Quit the application")
+	fmt.Println()
+}
+
+func main() {
+	DoList := ToDo{}
+
+	goOn := true
+
+	for goOn {
+		Greet()
+
+		var slct int
+		fmt.Printf("Select a function to run by just typing the number: ")
+		fmt.Scanln(&slct)
+		fmt.Println()
+
+		switch slct {
+		case 1:
+			AddTask(&DoList)
+		case 2:
+			viewTasks(&DoList)
+		case 3:
+			markComp(&DoList)
+		case 4:
+			delTask(&DoList)
+		case 5:
+			quit(&goOn, &DoList)
+		default:
+			fmt.Println("Wrong function number.")
+		}
+		fmt.Println()
+		fmt.Println()
+		fmt.Println()
+		fmt.Println()
+	}
+
+	fmt.Println("Closing the list...")
+}
